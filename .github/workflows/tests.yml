@@ -40,9 +40,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-tox-
 
-      - name: Install Tox
-        run: pip install tox
-
       # - name: Setup git credentials
       #   uses: fusion-engineering/setup-git-credentials@v2
       #   with:
