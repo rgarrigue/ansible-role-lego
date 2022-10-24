@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: lego
+  namespace: rgarrigue
+  author: "Rémy Garrigue"
+  description: "Setup Lego, an alternative to certbot to provides certificates througgh the ACME protocol, and specificaly let's encrypt in our case."
+  company: "Rémy Garrigue"
+  license: "MIT"
+  min_ansible_version: "1.10"
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+    - name: CentOS
+      versions:
+        - "7"
+  galaxy_tags:
+    - system
+dependencies: []

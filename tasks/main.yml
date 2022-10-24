@@ -1,0 +1,92 @@
+---
+# tasks file for ansible-role-lego
+
+- name: Install Debian requirements
+  ansible.builtin.apt:
+    name:
+      - cron
+      - debianutils
+      - tar
+    state: present
+    update_cache: true
+    cache_valid_time: 60
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install CentOS requirements
+  ansible.builtin.yum:
+    name:
+      - cronie
+      - tar
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Download and install Lego
+  ansible.builtin.unarchive:
+    src: https://github.com//go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version }}_linux_amd64.tar.gz
+    dest: /usr/bin
+    remote_src: yes
+    owner: root
+    group: root
+    mode: "0500"
+  tags: molecule-idempotence-notest
+
+- name: Create directories
+  ansible.builtin.file:
+    state: directory
+    path: "/etc/letsencrypt/{{ item }}"
+    owner: root
+    group: root
+    mode: "0770"
+  loop:
+    - accounts
+    - certificates
+    - run-hooks
+    - renew-hooks
+
+- name: Create pre script
+  ansible.builtin.copy:
+    dest: "/etc/letsencrypt/pre.sh"
+    owner: root
+    group: root
+    mode: "0770"
+    content: |
+      {{ lego_pre_script }}
+
+- name: Create post script
+  ansible.builtin.copy:
+    dest: "/etc/letsencrypt/post.sh"
+    owner: root
+    group: root
+    mode: "0770"
+    content: |
+      {{ lego_post_script }}
+
+- name: Stop services before challenge
+  ansible.builtin.systemd:
+    state: stopped
+    name: "{{ item }}"
+  loop: "{{ lego_stop_start_services }}"
+  ignore_errors: true
+
+- name: Certificates initial generation
+  ansible.builtin.shell: . /etc/letsencrypt/pre.sh ; lego --accept-tos --path /etc/letsencrypt --email "{{ lego_email }}" --domains "{{ item }}" {{ lego_challenge }} run --run-hook "run-parts /etc/letsencrypt/run-hooks" ; /etc/letsencrypt/post.sh
+  args:
+    creates: /etc/letsencrypt/certificates/{{ item | regex_replace('^\*\.', '_.') }}.key
+  loop: "{{ lego_domains }}"
+
+- name: Start services after challenge
+  ansible.builtin.systemd:
+    state: started
+    name: "{{ item }}"
+  loop: "{{ lego_stop_start_services }}"
+  ignore_errors: true
+
+- name: Add crons for certificates renewall
+  ansible.builtin.cron:
+    name: Lego {{ item }} certificate automatic renewal
+    job: "{% if lego_stop_start_services %}systemctl stop {{ lego_stop_start_services | join(' ') }} ; {% endif %}. /etc/letsencrypt/pre.sh ; lego --accept-tos --path /etc/letsencrypt --email '{{ lego_email }}' --domains '{{ item }}' {{ lego_challenge }} renew --renew-hook 'run-parts /etc/letsencrypt/renew-hooks' | grep -v 'no renewal' ; /etc/letsencrypt/post.sh{% if lego_stop_start_services %} ; systemctl start {{ lego_stop_start_services | join(' ') }}{% endif %} ;  "
+    minute: "{{ lego_renew_minute }}"
+    hour: "{{ lego_renew_hour }}"
+    user: root
+  loop: "{{ lego_domains }}"
+  tags: molecule-idempotence-notest

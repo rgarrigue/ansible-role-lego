@@ -1,0 +1,31 @@
+---
+# defaults file for ansible-role-lego
+
+lego_version: "4.9.0"
+
+lego_email: contact@example.com
+
+lego_challenge: --http
+# lego_challenge: --dns route53
+
+# List of service to be stopped before a challenge, and restarted after. Usually the one using port 80.
+lego_stop_start_services: []
+
+lego_domains: []
+#   - *.example.com
+#   - specific.example.com
+
+lego_renew_hour: "3"
+lego_renew_minute: "45"
+
+# Script to be run before lego commands, to set up a token for example
+lego_pre_script: |
+  #!/usr/bin/env bash
+  # Managed by Ansible
+  # export CLOUDFLARE_API_TOKEN=...
+
+# Script to be run after lego commands, to create links for example
+lego_post_script: |
+  #!/usr/bin/env bash
+  # Managed by Ansible
+  # ln -sf

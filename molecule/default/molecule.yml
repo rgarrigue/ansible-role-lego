@@ -1,0 +1,33 @@
+---
+dependency:
+  name: galaxy
+  # options:
+  #   force: False
+  #   ignore-errors: True
+driver:
+  name: containers
+lint: |
+  set -xe
+  yamllint .
+  ansible-lint .
+  flake8
+platforms:
+  - name: molecule-lego-debian10
+    image: docker.io/jrei/systemd-debian:10
+    privileged: True
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: /lib/systemd/systemd
+  - name: molecule-lego-centos7
+    image: docker.io/centos:7
+    privileged: True
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: /usr/sbin/init
+provisioner:
+  name: ansible
+  log: true
+verifier:
+  name: testinfra
+  options:
+    tb: short

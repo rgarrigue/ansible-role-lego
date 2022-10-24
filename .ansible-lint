@@ -1,0 +1,6 @@
+skip_list:
+  - experimental  # all rules tagged as experimental
+  - role-name  # Role name {0} does not match ``^[a-z][a-z0-9_]+$`` pattern
+
+exclude_paths:
+  - '../../.ansible'
