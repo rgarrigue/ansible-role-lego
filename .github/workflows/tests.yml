@@ -14,15 +14,15 @@ jobs:
         python: ["3.10"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "${{ matrix.python }}"
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: "${{ runner.os }}-pip"
@@ -33,7 +33,7 @@ jobs:
         run: pip install tox
 
       - name: Cache Tox
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.tox
           key: "${{ runner.os }}-tox-{% raw %}${{ hashFiles('**/tox.ini') }}{% endraw %}"
@@ -43,10 +43,10 @@ jobs:
       - name: Install Tox
         run: pip install tox
 
-      - name: Setup git credentials
-        uses: fusion-engineering/setup-git-credentials@v2
-        with:
-          credentials: "${{secrets.GIT_CREDENTIALS}}"
+      # - name: Setup git credentials
+      #   uses: fusion-engineering/setup-git-credentials@v2
+      #   with:
+      #     credentials: "${{secrets.GIT_CREDENTIALS}}"
 
       - name: Run Tox
         run: tox
@@ -54,7 +54,7 @@ jobs:
       # - name: Mattermost notification
       #   if: ${{ failure() }}
       #   # https://github.com/marketplace/actions/slack-notify
-      #   uses: rtCamp/action-slack-notify@v2.1.0
+      #   uses: rtCamp/action-slack-notify@v2.2.0
       #   env:
       #     SLACK_WEBHOOK: "${{ secrets.MATTERMOST_WEBHOOK }}"
       #     SLACK_CHANNEL: "dev-failed-tests"
